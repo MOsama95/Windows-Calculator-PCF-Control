@@ -1,4 +1,11 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
+import { BackspaceHandler } from "./InputStrategies/backspace-handler";
+import { ClearHandler } from "./InputStrategies/clear-handler";
+import { DecimalHandler } from "./InputStrategies/decimal-handler";
+import { HandlerStrategy } from "./InputStrategies/handler-strategy";
+import { NumberHandler } from "./InputStrategies/number-handler";
+import { OperatorHandler } from "./InputStrategies/operator-handler";
+import { ZeroHandler } from "./InputStrategies/zero-handler";
 
 export class WindowsCalculator implements ComponentFramework.StandardControl<IInputs, IOutputs> {
     private _container: HTMLDivElement;
@@ -15,6 +22,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
     ): void {
         this._container = container;
         this._notifyOutputChanged = notifyOutputChanged;
+        
         // calculator container
         const calcContainer = document.createElement("div");
         calcContainer.classList.add("calc-container");
@@ -25,7 +33,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         titleHead.classList.add("calc-title");
         calcContainer.appendChild(titleHead);
 
-        // Create display area
+        // calculator display area
         const displayContainer = document.createElement("div");
         displayContainer.classList.add("display-container");
         calcContainer.appendChild(displayContainer);
@@ -44,7 +52,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
             ["⊘", "0", ".", "="]
         ];
         
-        // insert UI buttons 
+        // UI buttons 
         buttonLayout.forEach(row => {
             const rowDiv = document.createElement("div");
             rowDiv.classList.add("calc-row");
@@ -58,7 +66,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
             calcContainer.appendChild(rowDiv);
         });
 
-        // append to main container
+        // append elements to main container
         this._container.appendChild(calcContainer);
 
         // Add keyboard support
@@ -72,6 +80,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         }
     }
 
+    // update view
     public updateView(context: ComponentFramework.Context<IInputs>): void {
         // Sync external changes
         if (context.parameters.value.raw !== this._computedValue) {
@@ -81,90 +90,16 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         }
     }
 
+    // gets the output
     public getOutputs(): IOutputs {
         return {
             value: this._computedValue
         };
     }
 
+    // destory function
     public destroy(): void {
         // Clean-up if needed
-    }
-
-    private handleInput(char: string): void {
-        switch (char){
-        case"=":
-            // calculate result
-            this.calculate();
-            break;
-        case"C":
-            // Clear input
-            this._currentValue = "0";
-            this.calculate();
-            break;
-        case"⌫":
-            // Remove last character
-            if(this._currentValue.length > 1) {
-                this._currentValue = this._currentValue.slice(0, -1);
-                this.calculate();
-            }
-            // Clear input
-            else {
-                this._currentValue = "0";
-                this.calculate();
-            }
-            break;
-        case"⊘":
-            // do nothing
-            break;
-        case"0":
-            if(char !== this._currentValue){
-                // append char to the expression
-                this._currentValue += char;
-                this._display.value = this._currentValue;
-            }
-            break;
-        case".":
-            if(this._currentValue.length == 0 || 
-              (this._currentValue.length > 0 && char != this._currentValue[this._currentValue.length-1])){
-                // append char to the expression
-                this._currentValue += char;
-                this._display.value = this._currentValue;
-            }
-            break;
-        case"+":
-        case"-":
-        case"*":
-        case"/":{
-            if(this._currentValue.length == 0) {
-                // do nothing
-            } 
-            const operators = ["+", "-", "*", "/"];
-            if(operators.includes(this._currentValue[this._currentValue.length-1]) ){
-                // overwrite repeated operators
-                this._currentValue = this._currentValue.slice(0, -1);
-                this._currentValue += char;
-                this._display.value = this._currentValue;
-            } else {
-                // append char to the expression
-                this._currentValue += char;
-                this._display.value = this._currentValue;
-            }
-            break;
-        }
-        default:
-            if(this._currentValue === "0") {
-                // append char to the expression
-                this._currentValue = char;
-                this._display.value = this._currentValue;
-            } else {
-                // append char to the expression
-                this._currentValue += char;
-                this._display.value = this._currentValue;   
-            }
-            break;
-        }
-        return;
     }
 
     // support keyboard inputs
@@ -184,20 +119,78 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         });
     }
 
-    // calculate reult
+    // handles and validates inputs of different types
+    private handleInput(char: string): void {
+        let handler: HandlerStrategy;
+        switch (char){
+        case"=":
+            // calculate result
+            this.calculate();
+            break;
+        case"C":
+            // Clear input
+            handler = new ClearHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this.calculate();
+            break;
+        case"⌫":
+            // validate backspace entry
+            handler = new BackspaceHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this._display.value = this._currentValue;
+            break;
+        case"⊘":
+            // do nothing
+            break;
+        case"0":
+            // validate zero entry
+            handler = new ZeroHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this._display.value = this._currentValue;
+            break;
+        case".":
+            // validate decimal dot entry
+            handler = new DecimalHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this._display.value = this._currentValue;
+            break;
+        case"+":
+        case"-":
+        case"*":
+        case"/":
+            // validate operators entry
+            handler = new OperatorHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this._display.value = this._currentValue;
+            break;
+        default:
+            // validate numbers entry
+            handler = new NumberHandler();
+            this._currentValue = handler.handle(this._currentValue, char);
+            this._display.value = this._currentValue;
+            break;
+        }
+        return;
+    }
+
+    // calculate result
     private calculate(): void {
         try {
-            // Safe-ish expression evaluation
-            const regex = /^[0-9+\-*/.]+$/;
-            if (regex.test(this._currentValue)) {
-                const result = eval(this._currentValue);
-                this._computedValue = parseFloat(result.toFixed(2));
-                this._currentValue = this._computedValue.toString();
-                this._display.value = this._currentValue;
-                this._notifyOutputChanged();
-            } else {
-                this._currentValue = "0";
-                this._display.value = "Invalid Inputs!";
+            let _operators = ["+", "-", "*", "/"];
+            if(!_operators.includes(this._currentValue[this._currentValue.length -1])) {
+                // expression evaluation
+                const regex = /^[0-9+\-*/.]+$/;
+                if (regex.test(this._currentValue)) {
+                    // update fields with result
+                    const result = eval(this._currentValue);
+                    this._computedValue = parseFloat(result.toFixed(2));
+                    this._currentValue = this._computedValue.toString();
+                    this._display.value = this._currentValue;
+                    this._notifyOutputChanged();
+                } else {
+                    this._currentValue = "0";
+                    this._display.value = "Invalid Inputs!";
+                }
             }
         } catch {
             this._currentValue = "0";
