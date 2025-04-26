@@ -135,7 +135,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         case"+":
         case"-":
         case"*":
-        case"/":
+        case"/":{
             if(this._currentValue.length == 0) {
                 // do nothing
             } 
@@ -151,6 +151,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
                 this._display.value = this._currentValue;
             }
             break;
+        }
         default:
             if(this._currentValue === "0") {
                 // append char to the expression

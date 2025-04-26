@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="TechLabs.Controls" constructor="WindowsCalculator" version="0.0.10" display-name-key="Windows Calculator" description-key="A simple calculator to add, subtract, multiply and divide numbers." control-type="standard">
+  <control namespace="TechLabs.Controls" constructor="WindowsCalculator" version="0.0.11" display-name-key="Windows Calculator" description-key="A simple calculator to add, subtract, multiply and divide numbers." control-type="standard">
     <!-- external services definition -->
     <external-service-usage enabled="false">
     </external-service-usage>
