@@ -176,7 +176,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
     // calculate result
     private calculate(): void {
         try {
-            let _operators = ["+", "-", "*", "/"];
+            const _operators = ["+", "-", "*", "/"];
             if(!_operators.includes(this._currentValue[this._currentValue.length -1])) {
                 // expression evaluation
                 const regex = /^[0-9+\-*/.]+$/;
