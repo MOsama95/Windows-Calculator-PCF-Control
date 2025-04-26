@@ -4,6 +4,7 @@
     flex-direction: column;
     background-color: #1b2222;
     padding: 2px;
+    min-width: 216px !important;
 }
 /* display area container */ 
 .display-container{

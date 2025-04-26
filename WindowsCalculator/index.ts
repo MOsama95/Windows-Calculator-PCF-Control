@@ -21,6 +21,7 @@ export class WindowsCalculator implements ComponentFramework.StandardControl<IIn
         container: HTMLDivElement
     ): void {
         this._container = container;
+        this._container.style.maxWidth="260px";
         this._notifyOutputChanged = notifyOutputChanged;
         
         // calculator container
