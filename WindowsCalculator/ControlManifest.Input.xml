@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="TechLabs.Controls" constructor="WindowsCalculator" version="0.0.4" display-name-key="Windows Calculator" description-key="A simple calculator to add, subtract, multiply and divide numbers." control-type="standard">
+  <control namespace="TechLabs.Controls" constructor="WindowsCalculator" version="0.0.10" display-name-key="Windows Calculator" description-key="A simple calculator to add, subtract, multiply and divide numbers." control-type="standard">
     <!-- external services definition -->
     <external-service-usage enabled="false">
     </external-service-usage>
@@ -17,7 +17,7 @@
       <type>Decimal</type>
     </type-group>
     <!-- property node identifies a specific, configurable piece of data that the control expects from CDS -->
-    <property name="controlValue" display-name-key="Control Value" description-key="Control Value" of-type-group="numbers" usage="bound" required="true" />
+    <property name="value" display-name-key="Control Value" description-key="Control Value" of-type-group="numbers" usage="bound" required="true" />
     <!-- UNCOMMENT TO ENABLE THE SPECIFIED API
     <feature-usage>
       <uses-feature name="Utility" required="true" />
